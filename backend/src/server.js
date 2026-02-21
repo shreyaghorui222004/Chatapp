@@ -10,28 +10,45 @@ import { ENV } from "./lib/env.js";
 import { app, server } from "./lib/socket.js";
 
 const __dirname = path.resolve();
-const PORT = ENV.PORT || 3000;
+const PORT = process.env.PORT || 3000;
+
+/* ===============================
+   MIDDLEWARE
+================================ */
 
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());
 
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+// CORS for production + development
+app.use(
+  cors({
+    origin: true, // allow all origins (safe for monolithic)
+    credentials: true,
+  })
+);
+
+/* ===============================
+   API ROUTES
+================================ */
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
 /* ===============================
-   SERVE FRONTEND BUILD
+   SERVE FRONTEND BUILD (MONOLITHIC)
 ================================ */
 
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+// Serve static files
+app.use(express.static(path.join(__dirname, "frontend/dist")));
 
+// React routing support
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
 });
+
+/* ===============================
+   START SERVER
+================================ */
 
 server.listen(PORT, () => {
   console.log("Server running on port: " + PORT);
